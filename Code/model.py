@@ -10,8 +10,8 @@ import numpy as np
 
 # My Convolution Block
 class ConvBlock(nn.Module):
-    def _init_(self, inplane, outplane):
-        super(ConvBlock, self)._init_()
+    def __init__(self, inplane, outplane):
+        super(ConvBlock, self).__init__()
         self.padding = (1, 1, 1, 1)
         self.conv = nn.Conv2d(inplane, outplane, kernel_size=3, padding=0, stride=1, bias=False)
         self.bn = nn.BatchNorm2d(outplane)
@@ -26,8 +26,9 @@ class ConvBlock(nn.Module):
 
     
 class IFCNN(nn.Module):
-    def _init_(self):
-        super(IFCNN, self)._init_()
+    def __init__(self, resnet, fuse_scheme=0):
+        super(IFCNN, self).__init__()
+        self.fuse_scheme = fuse_scheme # MAX, MEAN, SUM
         self.conv1 = ConvBlock(1,64)
         self.conv2 = ConvBlock(64, 64)
         self.conv3 = ConvBlock(64, 64)
@@ -123,8 +124,15 @@ class IFCNN(nn.Module):
         outs = self.operate(self.conv1, tensors)
         outs = self.operate(self.conv2, outs)
         
-        
-        out=self.tensor_max(outs)
+        # Feature fusion
+        if self.fuse_scheme == 0: # MAX
+            out = self.tensor_max(outs)
+        elif self.fuse_scheme == 1: # SUM
+            out = self.tensor_sum(outs)
+        elif self.fuse_scheme == 2: # MEAN
+            out = self.tensor_mean(outs)
+        else: # Default: MAX
+            out = self.tensor_max(outs)
         
         # Feature reconstruction
         out = self.conv3(out)
@@ -132,8 +140,9 @@ class IFCNN(nn.Module):
         return out
 
 
-def myIFCNN():
-    
+def myIFCNN(fuse_scheme=0):
+    # pretrained resnet101
+    resnet = models.resnet101(pretrained=True)
     # our model
-    model = IFCNN()
+    model = IFCNN(resnet, fuse_scheme=fuse_scheme)
     return model
