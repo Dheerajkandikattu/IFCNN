@@ -8,7 +8,7 @@ from PIL import Image
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
-    '.tif'
+    '.tif' , '.gif'
 ]
 
 class ImagePair(data.Dataset):
@@ -19,7 +19,7 @@ class ImagePair(data.Dataset):
         self.transform = transform
         
     def loader(self, path):
-        return Image.open(path).convert(self.mode)
+        return Image.open(path)
     
     def is_image_file(self, filename):
         return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
